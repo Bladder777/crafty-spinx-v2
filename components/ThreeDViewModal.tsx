@@ -33,7 +33,7 @@ const ThreeDViewModal: React.FC<ThreeDViewModalProps> = ({ item, onClose }) => {
       onClick={onClose}
     >
       <div 
-        className="bg-brand-white-ish rounded-2xl shadow-xl p-4 md:p-6 w-full max-w-lg m-4 flex flex-col relative"
+        className="bg-brand-white-ish rounded-2xl shadow-xl p-4 md:p-6 w-full max-w-lg m-4 flex flex-col relative max-h-[90vh] overflow-y-auto"
         onClick={e => e.stopPropagation()}
       >
         <button 
