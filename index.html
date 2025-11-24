@@ -1,0 +1,121 @@
+<!DOCTYPE html>
+<html lang="en">
+  <head>
+    <meta charset="UTF-8" />
+    <link rel="icon" type="image/svg+xml" href="/vite.svg" />
+    <meta name="viewport" content="width=device-width, initial-scale=1.0" />
+    <title>Crafty Spinx Catalog</title>
+    <script src="https://cdn.tailwindcss.com"></script>
+    <!-- 3D Model Viewer Script Removed -->
+    <style>
+      :root, .theme-pastel {
+        --color-bg: #FFF8F0;
+        --color-text: #574F41;
+        --color-primary: #FFC0CB;
+        --color-secondary: #A0E7E5;
+        --color-accent: #F38181;
+        --color-white-ish: #FFFFFF;
+      }
+      .theme-forest {
+        --color-bg: #F3F9F2;
+        --color-text: #3A4F41;
+        --color-primary: #A3D29C;
+        --color-secondary: #77A06F;
+        --color-accent: #C78C53;
+        --color-white-ish: #FDFDFD;
+      }
+      .theme-ocean {
+        --color-bg: #F0F8FF;
+        --color-text: #2C3E50;
+        --color-primary: #87CEEB;
+        --color-secondary: #4682B4;
+        --color-accent: #FFA500;
+        --color-white-ish: #FFFFFF;
+      }
+
+      /* --- Smooth Scrolling & Custom Scrollbar --- */
+      html {
+        scroll-behavior: smooth;
+      }
+
+      /* For Firefox */
+      * {
+        scrollbar-width: thin;
+        scrollbar-color: var(--color-secondary) var(--color-bg);
+      }
+      
+      /* For Webkit-based browsers (Chrome, Safari) */
+      ::-webkit-scrollbar {
+        width: 8px;
+        height: 8px;
+      }
+
+      ::-webkit-scrollbar-track {
+        background: var(--color-bg);
+      }
+
+      ::-webkit-scrollbar-thumb {
+        background-color: var(--color-secondary);
+        border-radius: 10px;
+        border: 2px solid var(--color-bg);
+      }
+       ::-webkit-scrollbar-thumb:hover {
+        background-color: var(--color-primary);
+      }
+    </style>
+    <script>
+      tailwind.config = {
+        theme: {
+          extend: {
+            colors: {
+              'brand-background': 'var(--color-bg)',
+              'brand-primary': 'var(--color-primary)',
+              'brand-secondary': 'var(--color-secondary)',
+              'brand-accent': 'var(--color-accent)',
+              'brand-text': 'var(--color-text)',
+              'brand-white-ish': 'var(--color-white-ish)',
+            },
+            fontFamily: {
+              'display': ['"Comic Sans MS"', 'cursive'],
+              'body': ['"Gill Sans"', 'sans-serif'],
+            },
+             animation: {
+              'fade-in': 'fade-in 0.5s ease-in-out forwards',
+              'item-in': 'item-in 0.4s ease-out forwards',
+              'price-pop': 'price-pop 0.35s ease-out',
+            },
+            keyframes: {
+              'fade-in': {
+                '0%': { opacity: 0, transform: 'translateY(10px)' },
+                '100%': { opacity: 1, transform: 'translateY(0)' },
+              },
+              'item-in': {
+                'from': { opacity: 0, transform: 'translateX(-15px)' },
+                'to': { opacity: 1, transform: 'translateX(0)' },
+              },
+              'price-pop': {
+                '0%, 100%': { transform: 'scale(1)' },
+                '50%': { transform: 'scale(1.08)' },
+              },
+            }
+          }
+        }
+      }
+    </script>
+  <script type="importmap">
+{
+  "imports": {
+    "@google/genai": "https://aistudiocdn.com/@google/genai@^1.28.0",
+    "react-dom/": "https://aistudiocdn.com/react-dom@^19.2.0/",
+    "react/": "https://aistudiocdn.com/react@^19.2.0/",
+    "react": "https://aistudiocdn.com/react@^19.2.0"
+  }
+}
+</script>
+<link rel="stylesheet" href="/index.css">
+</head>
+  <body class="bg-brand-background">
+    <div id="root"></div>
+    <script type="module" src="/index.tsx"></script>
+  </body>
+</html>
