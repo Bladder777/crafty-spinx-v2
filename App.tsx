@@ -11,12 +11,12 @@ import WishlistView from './components/WishlistView';
 import EditItemModal from './components/EditItemModal';
 import AddItemModal from './components/AddItemModal';
 import ConfirmationModal from './components/ConfirmationModal';
-import LoginPage from '@/src/pages/LoginPage'; // Corrected import path
-import { supabase } from './src/integrations/supabase/client';
-import { useSession } from '@/src/components/SessionContextProvider'; // Corrected import path
+import { supabase } from './src/services/supabaseClient';
+import { SessionContextProvider, useSession } from './src/integrations/supabase/auth/SessionContextProvider';
+import Login from './src/pages/Login';
 
-const App: React.FC = () => {
-  const { session, isLoading: isSessionLoading } = useSession(); // Use the session context
+const AppContent: React.FC = () => {
+  const { session, user } = useSession();
   const [items, setItems] = React.useState<CraftItem[]>([]);
   const [cartItems, setCartItems] = React.useState<CraftItem[]>([]);
   const [wishlist, setWishlist] = React.useState<Set<number>>(() => {
@@ -35,10 +35,12 @@ const App: React.FC = () => {
   const [isSettingsOpen, setSettingsOpen] = React.useState(false);
   const [editingItem, setEditingItem] = React.useState<CraftItem | null>(null);
   const [isAddItemModalOpen, setAddItemModalOpen] = React.useState(false);
-  const [isAdminMode, setIsAdminMode] = React.useState(false); // Now derived from Supabase profile
   const [confirmation, setConfirmation] = React.useState<{ message: string; onConfirm: () => void; } | null>(null);
 
-  // Fetch items from Supabase on initial mount or when session changes
+  // Admin mode is now determined by user session
+  const isAdminMode = !!user; // If a user is logged in, they are considered an admin for this app's purpose
+
+  // Fetch items from Supabase on initial mount or when user changes (e.g., login/logout)
   React.useEffect(() => {
     const fetchItems = async () => {
       const { data, error } = await supabase
@@ -55,31 +57,7 @@ const App: React.FC = () => {
     };
 
     fetchItems();
-  }, [session]); // Refetch items if session changes (e.g., user logs in/out)
-
-  // Fetch user profile and set admin mode
-  React.useEffect(() => {
-    const fetchProfile = async () => {
-      if (session?.user) {
-        const { data, error } = await supabase
-          .from('profiles')
-          .select('is_admin')
-          .eq('id', session.user.id)
-          .single();
-
-        if (error) {
-          console.error('Error fetching profile:', error);
-          setIsAdminMode(false);
-        } else if (data) {
-          setIsAdminMode(data.is_admin);
-        }
-      } else {
-        setIsAdminMode(false); // Not logged in, not admin
-      }
-    };
-
-    fetchProfile();
-  }, [session]); // Re-run when session changes
+  }, [user]); // Re-fetch items if user changes (e.g., after login/logout)
 
   // Persist wishlist to localStorage whenever it changes
   React.useEffect(() => {
@@ -90,11 +68,24 @@ const App: React.FC = () => {
     }
   }, [wishlist]);
 
-  // Admin login/logout now handled by Supabase Auth UI
-  const handleAdminLogin = async () => {
-    // This function is now a placeholder, actual login happens via Auth UI
-    // We will rely on the session and profile fetch to set isAdminMode
-    setSettingsOpen(false);
+  const handleAdminLogin = async (email: string, password?: string) => {
+    if (password) {
+      const { error } = await supabase.auth.signInWithPassword({ email, password });
+      if (error) {
+        alert(`Login failed: ${error.message}`);
+      } else {
+        alert("Admin mode enabled.");
+        setSettingsOpen(false);
+      }
+    } else {
+      const { error } = await supabase.auth.signInWithOtp({ email });
+      if (error) {
+        alert(`Magic link failed: ${error.message}`);
+      } else {
+        alert("Check your email for the magic link!");
+        setSettingsOpen(false);
+      }
+    }
   };
 
   const handleAdminLogout = async () => {
@@ -103,9 +94,8 @@ const App: React.FC = () => {
       console.error('Error logging out:', error);
       alert('Failed to log out.');
     } else {
-      alert('Logged out successfully.');
+      alert("Admin mode disabled.");
       setSettingsOpen(false);
-      setIsAdminMode(false); // Explicitly set to false on logout
     }
   };
 
@@ -151,9 +141,6 @@ const App: React.FC = () => {
         imageUrl: updatedItem.imageUrl,
         category: updatedItem.category,
         modelUrl: updatedItem.modelUrl,
-        status: updatedItem.status, // Include new fields
-        is_available: updatedItem.is_available, // Include new fields
-        knitter: updatedItem.knitter, // Include new fields
       })
       .eq('id', updatedItem.id);
 
@@ -275,18 +262,8 @@ const App: React.FC = () => {
   const wishlistItems = items.filter(item => wishlist.has(item.id));
   const cartItemIds = new Set(cartItems.map(i => i.id));
 
-  // Show loading state while session is being fetched
-  if (isSessionLoading) {
-    return (
-      <div className="min-h-screen flex items-center justify-center bg-brand-background text-brand-text">
-        Loading authentication...
-      </div>
-    );
-  }
-
-  // If no session, show login page
   if (!session) {
-    return <LoginPage />;
+    return <Login />;
   }
 
   return (
@@ -355,7 +332,7 @@ const App: React.FC = () => {
       )}
 
       {isAdminMode && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 bg-brand-secondary text-brand-text px-4 py-1 rounded-full text-sm font-bold shadow-lg animate-fade-in z-30">
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 bg-yellow-300 text-yellow-800 px-4 py-1 rounded-full text-sm font-bold shadow-lg animate-fade-in z-30">
             Admin Mode Enabled
         </div>
       )}
@@ -373,7 +350,7 @@ const App: React.FC = () => {
         currentTheme={theme}
         onSetTheme={handleSetTheme}
         isAdminMode={isAdminMode}
-        onAdminLogin={handleAdminLogin} // Placeholder, actual login via Auth UI
+        onAdminLogin={handleAdminLogin}
         onAdminLogout={handleAdminLogout}
         items={items}
         onImportItems={handleImportItems}
@@ -403,5 +380,11 @@ const App: React.FC = () => {
     </div>
   );
 };
+
+const App: React.FC = () => (
+  <SessionContextProvider>
+    <AppContent />
+  </SessionContextProvider>
+);
 
 export default App;

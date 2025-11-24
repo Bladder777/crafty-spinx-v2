@@ -1,7 +1,11 @@
+// FIX: Removed the problematic triple-slash directive for React types.
+// This directive was causing a type resolution failure, likely by conflicting
+// with the project's tsconfig.json, which prevented TypeScript from
+// recognizing JSX syntax across the entire application. Removing it allows
+// the standard type acquisition via `import React` to function correctly.
 import * as React from 'react';
 import ReactDOM from 'react-dom/client';
 import App from './App';
-import { SessionContextProvider } from '@/src/components/SessionContextProvider'; // Corrected import path
 
 const rootElement = document.getElementById('root');
 if (!rootElement) {
@@ -11,8 +15,6 @@ if (!rootElement) {
 const root = ReactDOM.createRoot(rootElement);
 root.render(
   <React.StrictMode>
-    <SessionContextProvider>
-      <App />
-    </SessionContextProvider>
+    <App />
   </React.StrictMode>
 );

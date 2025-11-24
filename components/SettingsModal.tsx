@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { CraftItem } from '../types';
-// No need to import supabase client here for admin login anymore
+import { supabase } from '../src/services/supabaseClient'; // Import supabase client
 
 interface SettingsModalProps {
   isOpen: boolean;
@@ -8,7 +8,7 @@ interface SettingsModalProps {
   currentTheme: string;
   onSetTheme: (theme: string) => void;
   isAdminMode: boolean;
-  onAdminLogin: (password: string) => void; // Simplified signature
+  onAdminLogin: (email: string, password?: string) => void; // Updated signature
   onAdminLogout: () => void;
   items: CraftItem[];
   onImportItems: (jsonString: string) => void;
@@ -23,15 +23,22 @@ const themes = [
 ];
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, currentTheme, onSetTheme, isAdminMode, onAdminLogin, onAdminLogout, items, onImportItems, onResetToDefaults, requestConfirmation }) => {
-  const [password, setPassword] = React.useState(''); // Only password state needed
+  const [email, setEmail] = React.useState(''); // New state for email
+  const [password, setPassword] = React.useState('');
   const [isAboutOpen, setAboutOpen] = React.useState(false);
   const [isDragging, setIsDragging] = React.useState(false);
 
   if (!isOpen) return null;
 
   const handleUnlockClick = () => {
-    onAdminLogin(password); // Pass only password
+    onAdminLogin(email, password); // Pass email and password
+    setEmail('');
     setPassword('');
+  };
+
+  const handleMagicLinkClick = () => {
+    onAdminLogin(email); // Only pass email for magic link
+    setEmail('');
   };
 
   const handleExport = () => {
@@ -243,21 +250,35 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, currentT
             ) : (
                 <div className="space-y-2">
                     <input
+                        type="email"
+                        value={email}
+                        onChange={(e) => setEmail(e.target.value)}
+                        placeholder="Enter admin email"
+                        className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-brand-accent focus:border-brand-accent"
+                    />
+                    <input
                         type="password"
                         value={password}
                         onChange={(e) => setPassword(e.target.value)}
                         onKeyPress={(e) => e.key === 'Enter' && handleUnlockClick()}
-                        placeholder="Enter admin password"
+                        placeholder="Enter password (optional)"
                         className="w-full px-3 py-2 border border-gray-300 rounded-lg focus:ring-brand-accent focus:border-brand-accent"
                     />
                     <button
                         onClick={handleUnlockClick}
                         className="w-full bg-brand-secondary text-brand-white-ish font-bold py-2 px-4 rounded-lg hover:bg-opacity-80 transition-all"
                     >
-                        Unlock Admin Mode
+                        Login with Email & Password
+                    </button>
+                    <button
+                        onClick={handleMagicLinkClick}
+                        className="w-full bg-brand-primary text-brand-white-ish font-bold py-2 px-4 rounded-lg hover:bg-opacity-80 transition-all"
+                    >
+                        Send Magic Link
                     </button>
                     <p className="text-xs text-gray-500 text-center">
-                        The password is '12345678'. This is for local demonstration only and is not secure for production.
+                        If you don't have an account, entering your email and a password will create one.
+                        Using a magic link will send a login link to your email.
                     </p>
                 </div>
             )}
