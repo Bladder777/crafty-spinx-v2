@@ -33,16 +33,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, currentT
     setPassword('');
   };
 
-  const handleExport = () => {
-    const jsonString = `data:text/json;charset=utf-8,${encodeURIComponent(
-        JSON.stringify(items, null, 2)
-    )}`;
-    const link = document.createElement("a");
-    link.href = jsonString;
-    link.download = "craft-items.json";
-    link.click();
-    onClose();
-  };
+  // Removed handleExport as it's no longer needed.
   
   const processFile = (file: File) => {
     if (file && file.type === 'application/json') {
@@ -69,7 +60,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, currentT
           const file = (e.target as HTMLInputElement).files?.[0];
           if (file) {
              requestConfirmation(
-                'Are you sure? This will replace all current items with the data from the file. This action cannot be undone.',
+                'Are you sure? This will replace all current items in the database with the data from the file. This action cannot be undone.',
                 () => processFile(file)
             );
           }
@@ -100,7 +91,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, currentT
     if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
       const file = e.dataTransfer.files[0];
       requestConfirmation(
-        'Are you sure? This will replace all current items with the data from the file. This action cannot be undone.',
+        'Are you sure? This will replace all current items in the database with the data from the file. This action cannot be undone.',
         () => {
             processFile(file);
             e.dataTransfer.clearData();
@@ -211,14 +202,9 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, currentT
                         >
                             Import & Replace Data
                         </button>
-                        <p className="text-xs text-gray-500 text-center">Load a `craft-items.json` file to overwrite the current local catalog. This is for previewing and staging only.</p>
-                        <button
-                            onClick={handleExport}
-                            className="w-full bg-green-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-green-600 transition-colors"
-                        >
-                            Export for Production
-                        </button>
-                        <p className="text-xs text-gray-500 text-center">Click to download the updated product list. Send this file to the developer to deploy your changes.</p>
+                        <p className="text-xs text-gray-500 text-center">Load a `craft-items.json` file to overwrite the current catalog in the database. This action will replace all existing items.</p>
+                        
+                        {/* Removed Export for Production button */}
                         
                         <button
                             onClick={onResetToDefaults}
@@ -226,7 +212,7 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, currentT
                         >
                             Reset to Factory Defaults
                         </button>
-                        <p className="text-xs text-gray-500 text-center">Reverts the local catalog to its original state. This cannot be undone.</p>
+                        <p className="text-xs text-gray-500 text-center">Reverts the catalog in the database to its original default state. This cannot be undone.</p>
 
                         <button
                             onClick={onAdminLogout}
