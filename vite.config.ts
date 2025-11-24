@@ -13,8 +13,9 @@ export default defineConfig(({ mode }) => {
       define: {
         'process.env.API_KEY': JSON.stringify(env.GEMINI_API_KEY),
         'process.env.GEMINI_API_KEY': JSON.stringify(env.GEMINI_API_KEY),
-        'import.meta.env.VITE_SUPABASE_URL': JSON.stringify(env.VITE_SUPABASE_URL),
-        'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify(env.VITE_SUPABASE_ANON_KEY),
+        // Directly injecting Supabase URL and Anon Key
+        'import.meta.env.VITE_SUPABASE_URL': JSON.stringify("https://wzfwgsrtnoyzcqznbovi.supabase.co"),
+        'import.meta.env.VITE_SUPABASE_ANON_KEY': JSON.stringify("eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind6Zndnc3J0bm95emNxem5ib3ZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5MTU5MzUsImV4cCI6MjA3OTQ5MTkzNX0.KyuCNt4RJfHGfXoQ4Mc83a_5JQxtRbaJ10sW6NZ6c8E"),
       },
       resolve: {
         alias: {
