@@ -11,7 +11,7 @@ import WishlistView from './components/WishlistView';
 import EditItemModal from './components/EditItemModal';
 import AddItemModal from './components/AddItemModal';
 import ConfirmationModal from './components/ConfirmationModal';
-import { supabase } from './src/services/supabaseClient'; // Keep Supabase client for item CRUD
+import { supabase } from './src/integrations/supabase/client'; // Corrected import path
 
 const App: React.FC = () => {
   const [items, setItems] = React.useState<CraftItem[]>([]);

@@ -10,6 +10,9 @@ export interface CraftItem {
   imageUrl: string;
   category: Category;
   modelUrl?: string;
+  status?: string; // New: e.g., 'Available', 'Sold', 'On Hold'
+  is_available?: boolean; // New: for stock management
+  knitter?: string; // New: who made the item
 }
 
 export type View = 'catalog' | 'cart' | 'wishlist';
