@@ -36,7 +36,6 @@ declare global {
       button: React.DetailedHTMLProps<React.ButtonHTMLAttributes<HTMLButtonElement>, HTMLButtonElement>;
       canvas: React.DetailedHTMLProps<React.CanvasHTMLAttributes<HTMLCanvasElement>, HTMLCanvasElement>;
       caption: React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>;
-      cite: React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>;
       code: React.DetailedHTMLProps<React.HTMLAttributes<HTMLElement>, HTMLElement>;
       col: React.DetailedHTMLProps<React.ColHTMLAttributes<HTMLTableColElement>, HTMLTableColElement>;
       colgroup: React.DetailedHTMLProps<React.ColgroupHTMLAttributes<HTMLTableColElement>, HTMLTableColElement>;
