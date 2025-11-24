@@ -11,8 +11,9 @@ import WishlistView from './components/WishlistView';
 import EditItemModal from './components/EditItemModal';
 import AddItemModal from './components/AddItemModal';
 import ConfirmationModal from './components/ConfirmationModal';
-import { supabase } from './src/services/supabaseClient';
+import { supabase } from './src/services/supabaseClient'; // Corrected import path
 import { User } from '@supabase/supabase-js'; // Import Supabase User type
+import LoginPage from './src/pages/LoginPage'; // Corrected import path
 
 const App: React.FC = () => {
   const [user, setUser] = React.useState<User | null>(null);
@@ -41,6 +42,7 @@ const App: React.FC = () => {
         // Clear user-specific data on logout
         setWishlist(new Set());
         setCartItems([]);
+        setIsAdminMode(false); // Also disable admin mode on logout
       }
     });
 
@@ -51,6 +53,15 @@ const App: React.FC = () => {
       if (session?.user) {
         fetchWishlistItems(session.user.id);
         fetchCartItems(session.user.id);
+        // Check admin status on initial session load
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', session.user.id)
+          .single();
+        if (!profileError && profileData?.is_admin) {
+          setIsAdminMode(true);
+        }
       }
     };
     getSession();
@@ -465,6 +476,11 @@ const App: React.FC = () => {
 
   const wishlistItems = items.filter(item => wishlist.has(item.id));
   const cartItemIds = new Set(cartItems.map(i => i.id));
+
+  // If no user is logged in, show the login page
+  if (!user) {
+    return <LoginPage />;
+  }
 
   return (
     <div className={`theme-${theme} min-h-screen bg-brand-background font-body text-brand-text flex flex-col`}>
