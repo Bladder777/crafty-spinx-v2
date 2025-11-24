@@ -9,7 +9,6 @@ interface SettingsModalProps {
   isAdminMode: boolean;
   onAdminLogin: (password: string) => void;
   onAdminLogout: () => void;
-  items: CraftItem[]; // Still passed, but not directly used in this component after import removal
   onResetToDefaults: () => void;
   requestConfirmation: (message: string, onConfirm: () => void) => void;
 }
@@ -18,6 +17,7 @@ const themes = [
     { id: 'pastel', name: 'Pastel Dreams', colors: ['#FFC0CB', '#A0E7E5', '#F38181'] },
     { id: 'forest', name: 'Forest Whisper', colors: ['#A3D29C', '#77A06F', '#C78C53'] },
     { id: 'ocean', name: 'Ocean Breeze', colors: ['#87CEEB', '#4682B4', '#FFA500'] },
+    { id: 'vibrant', name: 'Vibrant Play', colors: ['#FF6B6B', '#4ECDC4', '#FFD166'] }, // New vibrant theme colors
 ];
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, currentTheme, onSetTheme, isAdminMode, onAdminLogin, onAdminLogout, onResetToDefaults, requestConfirmation }) => {

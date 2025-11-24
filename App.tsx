@@ -257,7 +257,6 @@ const App: React.FC = () => {
     }
   };
 
-  // Removed handleImportItems function as it's no longer needed.
   
   const handleResetToDefaults = async () => {
     requestConfirmation(
@@ -314,8 +313,12 @@ const App: React.FC = () => {
     <div className={`theme-${theme} min-h-screen bg-brand-background font-body text-brand-text flex flex-col`}>
       <header className="p-4 flex justify-center items-center shadow-md bg-brand-white-ish/70 backdrop-blur-sm sticky top-0 z-20">
         <div className="text-center select-none">
-            <h1 className="text-3xl md:text-4xl font-display text-brand-accent">Crafty Spinx</h1>
-            <p className="text-sm text-gray-500">Handmade with love</p>
+            {theme === 'vibrant' ? (
+              <img src="https://i.ibb.co/Q811111/crafty-spinx-logo.png" alt="Crafty Spinx Logo" className="h-12 md:h-16 mx-auto mb-2" />
+            ) : (
+              <h1 className="text-3xl md:text-4xl font-display text-brand-accent">Crafty Spinx</h1>
+            )}
+            <p className="text-sm text-gray-500">Huggables</p>
         </div>
       </header>
       
