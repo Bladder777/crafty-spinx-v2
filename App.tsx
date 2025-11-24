@@ -64,37 +64,21 @@ const App: React.FC = () => {
     }
   }, [wishlist]);
 
-  // Admin login/logout (for now, still password-based, but will integrate with Supabase Auth later)
+  // Admin login/logout
   const handleAdminLogin = async (password: string) => {
-    // For now, we'll use a simple password check.
-    // In a real scenario, you'd use Supabase auth.signInWithPassword
-    // and check user metadata or roles for admin status.
+    // For now, admin mode is enabled purely by a local password check.
+    // This bypasses Supabase authentication for admin access, keeping it client-side.
     if (password === '08289737098') {
-      // Simulate admin login for now.
-      // In a full Supabase auth flow, you'd sign in a specific admin user.
-      const { data, error } = await supabase.auth.signInWithPassword({
-        email: 'admin@example.com', // Replace with an actual admin email
-        password: password,
-      });
-
-      if (error) {
-        alert(`Admin login failed: ${error.message}`);
-        console.error('Admin login error:', error);
-      } else if (data.user) {
-        setIsAdminMode(true);
-        alert("Admin mode enabled.");
-        setSettingsOpen(false);
-      }
+      setIsAdminMode(true);
+      alert("Admin mode enabled.");
+      setSettingsOpen(false);
     } else {
       alert("Incorrect password.");
     }
   };
 
   const handleAdminLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error('Error signing out:', error);
-    }
+    // No Supabase sign-out needed if admin mode is purely local.
     setIsAdminMode(false);
     alert("Admin mode disabled.");
     setSettingsOpen(false);
