@@ -9,7 +9,7 @@ A delightful catalog to browse and select charming, hand-knitted teddy bears. Us
 ## ✨ Features
 
 *   **Dynamic Catalog Views:** Seamlessly switch between a modern "swipe" view for quick browsing and a traditional "grid" view for an overview of all items.
-*   **Persistent Wishlist & Cart:** Add items to your wishlist and cart, with all selections saved locally in your browser for future visits.
+*   **Persistent Wishlist & Cart:** Add items to your wishlist and cart, with all selections saved to your Supabase account for cross-device access.
 *   **Live Admin Mode:** A password-protected administrative interface for managing the product catalog directly within the application (add, edit, delete items, reset catalog).
 *   **Real-time Data Sync:** Utilizes Supabase Realtime to instantly reflect changes across all connected clients when items are added, updated, or deleted.
 *   **Theme Customization:** Personalize your browsing experience with various color themes.
@@ -22,8 +22,6 @@ A delightful catalog to browse and select charming, hand-knitted teddy bears. Us
 *   **Tailwind CSS:** Utility-first CSS framework for rapid and responsive styling.
 *   **Vite:** Fast and efficient build tool and development server.
 *   **Supabase:** Backend-as-a-Service for database, authentication, and real-time capabilities.
-*   **Google Gemini API (`@google/genai`):** Integrated for AI-powered features (future enhancements).
-*   **Browser Local Storage:** Client-side data persistence for wishlist and cart.
 *   **Custom Routing:** Simple, state-based routing within `App.tsx`.
 *   **`lucide-react`:** A comprehensive set of beautiful and customizable open-source icons.
 
@@ -50,7 +48,7 @@ A delightful catalog to browse and select charming, hand-knitted teddy bears. Us
     Create a `.env.local` file in the root directory and add your Supabase project details.
     ```env
     VITE_SUPABASE_URL="https://wzfwgsrtnoyzcqznbovi.supabase.co"
-    VITE_SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind6Zndnc3J0bm95emNxem5ib3ZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5MTU5MzUsImV4cCI6MjA3OTQ5MTkzNX0.KyuCNt4RJfHGfXoQ4Mc83a_5JQxtRbaJ10sW6NZ6c8E"
+    VITE_SUPABASE_ANON_KEY="eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6Ind6Zndnc3J0bm95emNxem5ib3ZpIiwicm9sZSI6ImFub24iLCJpYXQiOjE3NjM5MTU5MzUsImexCI6MjA3OTQ5MTkzNX0.KyuCNt4RJfHGfXoQ4Mc83a_5JQxtRbaJ10sW6NZ6c8E"
     ```
     *Note: These keys are already hardcoded in `vite.config.ts` for AI Studio deployment, but for local development, using `.env.local` is a best practice.*
 
@@ -64,9 +62,9 @@ A delightful catalog to browse and select charming, hand-knitted teddy bears. Us
 ## ☁️ Supabase Integration
 
 This application leverages Supabase for its backend needs, providing:
-*   **Database:** Stores all craft item data and user profiles.
+*   **Database:** Stores all craft item data, user profiles, wishlists, and shopping carts.
 *   **Authentication:** Manages user sessions, including the admin login.
-*   **Realtime:** Ensures that catalog updates are instantly reflected across all active user sessions.
+*   **Realtime:** Ensures that catalog, wishlist, and cart updates are instantly reflected across all active user sessions.
 
 **Supabase Project ID:** `wzfwgsrtnoyzcqznbovi`
 

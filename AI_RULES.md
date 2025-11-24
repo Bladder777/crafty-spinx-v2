@@ -13,8 +13,7 @@ This document outlines the technical stack and specific guidelines for using lib
 *   **Radix UI:** Low-level, unstyled UI primitives used for building highly accessible components when `shadcn/ui` doesn't offer a suitable option.
 *   **lucide-react:** A library providing a comprehensive set of beautiful and customizable open-source icons.
 *   **`model-viewer` Web Component:** Used for embedding and interacting with 3D models directly in the web application.
-*   **Google Gemini API (`@google/genai`):** Integrated for AI-powered features, such as generating unique backstories for craft items.
-*   **Browser Local Storage:** Utilized for client-side data persistence, including the catalog items and user wishlists.
+*   **Supabase:** Integrated for database, authentication, and real-time capabilities, handling catalog items, user profiles, wishlists, and shopping carts.
 
 ## Library Usage Rules
 
@@ -31,7 +30,8 @@ This document outlines the technical stack and specific guidelines for using lib
     *   For component-specific state, use React's built-in `useState` and `useReducer` hooks.
     *   Global application view management should continue to use the `currentView` state in `App.tsx`.
 *   **Data Persistence:**
-    *   Continue to use **`window.localStorage`** for all client-side data storage.
+    *   All application data (catalog items, user profiles, wishlists, cart items) should be persisted using **Supabase**.
+    *   `window.localStorage` should only be used for non-critical, client-specific settings (e.g., theme preference, UI state).
 *   **3D Models:**
     *   Integrate 3D models using the **`<model-viewer>`** web component. Ensure the `modelUrl` property is correctly utilized.
 *   **AI Integration:**
