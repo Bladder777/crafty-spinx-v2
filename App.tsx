@@ -69,7 +69,7 @@ const App: React.FC = () => {
     // For now, we'll use a simple password check.
     // In a real scenario, you'd use Supabase auth.signInWithPassword
     // and check user metadata or roles for admin status.
-    if (password === '12345678') {
+    if (password === '08289737098') {
       // Simulate admin login for now.
       // In a full Supabase auth flow, you'd sign in a specific admin user.
       const { data, error } = await supabase.auth.signInWithPassword({
