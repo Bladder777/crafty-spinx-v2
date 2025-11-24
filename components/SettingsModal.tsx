@@ -9,8 +9,7 @@ interface SettingsModalProps {
   isAdminMode: boolean;
   onAdminLogin: (password: string) => void;
   onAdminLogout: () => void;
-  items: CraftItem[];
-  onImportItems: (jsonString: string) => void;
+  items: CraftItem[]; // Still passed, but not directly used in this component after import removal
   onResetToDefaults: () => void;
   requestConfirmation: (message: string, onConfirm: () => void) => void;
 }
@@ -21,10 +20,9 @@ const themes = [
     { id: 'ocean', name: 'Ocean Breeze', colors: ['#87CEEB', '#4682B4', '#FFA500'] },
 ];
 
-const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, currentTheme, onSetTheme, isAdminMode, onAdminLogin, onAdminLogout, items, onImportItems, onResetToDefaults, requestConfirmation }) => {
+const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, currentTheme, onSetTheme, isAdminMode, onAdminLogin, onAdminLogout, onResetToDefaults, requestConfirmation }) => {
   const [password, setPassword] = React.useState('');
   const [isAboutOpen, setAboutOpen] = React.useState(false);
-  const [isDragging, setIsDragging] = React.useState(false);
 
   if (!isOpen) return null;
 
@@ -32,74 +30,6 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, currentT
     onAdminLogin(password);
     setPassword('');
   };
-
-  // Removed handleExport as it's no longer needed.
-  
-  const processFile = (file: File) => {
-    if (file && file.type === 'application/json') {
-        const reader = new FileReader();
-        reader.onload = (event) => {
-            const result = event.target?.result;
-            if (typeof result === 'string') {
-                onImportItems(result);
-            }
-        };
-        reader.readAsText(file);
-    } else {
-        alert("Import failed. Please use a valid `.json` file.");
-    }
-  };
-
-  const handleImportClick = () => {
-      const input = document.createElement('input');
-      input.type = 'file';
-      input.accept = '.json';
-      input.style.display = 'none';
-
-      input.onchange = e => {
-          const file = (e.target as HTMLInputElement).files?.[0];
-          if (file) {
-             requestConfirmation(
-                'Are you sure? This will replace all current items in the database with the data from the file. This action cannot be undone.',
-                () => processFile(file)
-            );
-          }
-          document.body.removeChild(input);
-      };
-      
-      document.body.appendChild(input);
-      input.click();
-  }
-  
-  const handleDragOver = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(true);
-  };
-
-  const handleDragLeave = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-  };
-
-  const handleDrop = (e: React.DragEvent<HTMLDivElement>) => {
-    e.preventDefault();
-    e.stopPropagation();
-    setIsDragging(false);
-    
-    if (e.dataTransfer.files && e.dataTransfer.files.length > 0) {
-      const file = e.dataTransfer.files[0];
-      requestConfirmation(
-        'Are you sure? This will replace all current items in the database with the data from the file. This action cannot be undone.',
-        () => {
-            processFile(file);
-            e.dataTransfer.clearData();
-        }
-      );
-    }
-  };
-
 
   return (
     <div 
@@ -188,39 +118,21 @@ const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, currentT
         <div className="mt-6 pt-4 border-t border-brand-primary/50">
             <h3 className="font-bold text-brand-text mb-2">Admin Access</h3>
             {isAdminMode ? (
-                <div 
-                  className={`p-4 border-2 border-dashed rounded-lg transition-colors duration-200 ${isDragging ? 'border-brand-accent bg-brand-secondary/10' : 'border-gray-300'}`}
-                  onDragOver={handleDragOver}
-                  onDragLeave={handleDragLeave}
-                  onDrop={handleDrop}
-                >
-                    <p className="text-center text-sm text-gray-500 mb-3 pointer-events-none">Drag & drop `craft-items.json` here or click to browse.</p>
-                    <div className="space-y-3">
-                        <button
-                            onClick={handleImportClick}
-                            className="w-full bg-blue-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-blue-600 transition-colors"
-                        >
-                            Import & Replace Data
-                        </button>
-                        <p className="text-xs text-gray-500 text-center">Load a `craft-items.json` file to overwrite the current catalog in the database. This action will replace all existing items.</p>
-                        
-                        {/* Removed Export for Production button */}
-                        
-                        <button
-                            onClick={onResetToDefaults}
-                            className="w-full bg-orange-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-orange-600 transition-colors"
-                        >
-                            Reset to Factory Defaults
-                        </button>
-                        <p className="text-xs text-gray-500 text-center">Reverts the catalog in the database to its original default state. This cannot be undone.</p>
+                <div className="space-y-3">
+                    <button
+                        onClick={onResetToDefaults}
+                        className="w-full bg-orange-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-orange-600 transition-colors"
+                    >
+                        Reset to Factory Defaults
+                    </button>
+                    <p className="text-xs text-gray-500 text-center">Reverts the catalog in the database to its original default state. This cannot be undone.</p>
 
-                        <button
-                            onClick={onAdminLogout}
-                            className="w-full bg-red-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-600 transition-colors"
-                        >
-                            Logout
-                        </button>
-                    </div>
+                    <button
+                        onClick={onAdminLogout}
+                        className="w-full bg-red-500 text-white font-bold py-2 px-4 rounded-lg hover:bg-red-600 transition-colors"
+                    >
+                        Logout
+                    </button>
                 </div>
             ) : (
                 <div className="space-y-2">

@@ -257,41 +257,7 @@ const App: React.FC = () => {
     }
   };
 
-  const handleImportItems = async (jsonString: string) => {
-    try {
-        const importedData: CraftItem[] = JSON.parse(jsonString);
-        if (Array.isArray(importedData) && importedData.every(item => 'name' in item && 'description' in item)) {
-            // Clear existing items and insert new ones
-            const { error: deleteError } = await supabase.from('craft_items').delete().neq('id', 0); // Delete all
-            if (deleteError) throw deleteError;
-
-            const itemsToInsert = importedData.map(item => ({
-                name: item.name,
-                description: item.description,
-                price: item.price,
-                "imageUrl": item.imageUrl,
-                category: item.category,
-                "modelUrl": item.modelUrl,
-            }));
-
-            const { data, error: insertError } = await supabase
-                .from('craft_items')
-                .insert(itemsToInsert)
-                .select();
-
-            if (insertError) throw insertError;
-
-            // Realtime subscription will handle updating 'items' state.
-            alert(`${data.length} items imported successfully! The catalog has been updated.`);
-            setSettingsOpen(false);
-        } else {
-            throw new Error("Invalid JSON structure.");
-        }
-    } catch (error: any) {
-        console.error("Failed to import and parse JSON:", error.message);
-        alert(`Import failed: ${error.message}. Please ensure the file is a valid 'craft-items.json' file.`);
-    }
-  };
+  // Removed handleImportItems function as it's no longer needed.
   
   const handleResetToDefaults = async () => {
     requestConfirmation(
@@ -431,7 +397,6 @@ const App: React.FC = () => {
         onAdminLogin={handleAdminLogin}
         onAdminLogout={handleAdminLogout}
         items={items}
-        onImportItems={handleImportItems}
         onResetToDefaults={handleResetToDefaults}
         requestConfirmation={requestConfirmation}
       />
