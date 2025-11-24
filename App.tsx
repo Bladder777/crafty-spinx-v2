@@ -1,6 +1,6 @@
 import * as React from 'react';
 import { CraftItem, View } from './types';
-import { CRAFT_ITEMS } from './constants';
+import { CRAFT_ITEMS } from './constants'; // Keep for reset functionality
 import CatalogView from './components/CatalogView';
 import CartView from './components/OrderView';
 import Navbar from './components/Navbar';
@@ -11,6 +11,7 @@ import WishlistView from './components/WishlistView';
 import EditItemModal from './components/EditItemModal';
 import AddItemModal from './components/AddItemModal';
 import ConfirmationModal from './components/ConfirmationModal';
+import { supabase } from './src/services/supabaseClient'; // Import Supabase client
 
 const App: React.FC = () => {
   const [items, setItems] = React.useState<CraftItem[]>([]);
@@ -34,33 +35,27 @@ const App: React.FC = () => {
   const [isAdminMode, setIsAdminMode] = React.useState(false);
   const [confirmation, setConfirmation] = React.useState<{ message: string; onConfirm: () => void; } | null>(null);
 
-
-  // Load all item data from localStorage on initial mount
+  // Fetch items from Supabase on initial mount
   React.useEffect(() => {
-    try {
-      const cachedItemsJSON = window.localStorage.getItem('crafty-spinx-items');
-      if (cachedItemsJSON) {
-        setItems(JSON.parse(cachedItemsJSON));
-      } else {
+    const fetchItems = async () => {
+      const { data, error } = await supabase
+        .from('craft_items')
+        .select('*')
+        .order('id', { ascending: true });
+
+      if (error) {
+        console.error('Error fetching items:', error);
+        // Fallback to local constants if Supabase fetch fails
         setItems(CRAFT_ITEMS);
+      } else {
+        setItems(data as CraftItem[]);
       }
-    } catch (error) {
-      console.error("Could not load items from localStorage, using defaults.", error);
-      setItems(CRAFT_ITEMS);
-    }
+    };
+
+    fetchItems();
   }, []);
 
-  // Persist the entire item list to localStorage whenever it changes
-  React.useEffect(() => {
-    if (items.length > 0) { // Avoid saving an empty array on initial load
-        try {
-            window.localStorage.setItem('crafty-spinx-items', JSON.stringify(items));
-        } catch (error) {
-            console.error("Could not save items to localStorage", error);
-        }
-    }
-  }, [items]);
-
+  // Persist wishlist to localStorage whenever it changes
   React.useEffect(() => {
     try {
         window.localStorage.setItem('wishlistItems', JSON.stringify(Array.from(wishlist)));
@@ -117,64 +112,118 @@ const App: React.FC = () => {
     document.documentElement.className = `theme-${newTheme}`;
   }
   
-  const handleSaveItem = (updatedItem: CraftItem) => {
-    // Update the master list of items
-    setItems(prevItems =>
-        prevItems.map(i => (i.id === updatedItem.id ? updatedItem : i))
-    );
-    // FIX: Also update the item if it's in the cart to prevent stale data
-    setCartItems(prevCartItems =>
-      prevCartItems.map(cartItem => 
-        cartItem.id === updatedItem.id ? updatedItem : cartItem
-      )
-    );
-    setEditingItem(null);
+  const handleSaveItem = async (updatedItem: CraftItem) => {
+    const { error } = await supabase
+      .from('craft_items')
+      .update({
+        name: updatedItem.name,
+        description: updatedItem.description,
+        price: updatedItem.price,
+        imageUrl: updatedItem.imageUrl,
+        category: updatedItem.category,
+        modelUrl: updatedItem.modelUrl,
+      })
+      .eq('id', updatedItem.id);
+
+    if (error) {
+      console.error('Error updating item:', error);
+      alert('Failed to update item.');
+    } else {
+      setItems(prevItems =>
+          prevItems.map(i => (i.id === updatedItem.id ? updatedItem : i))
+      );
+      setCartItems(prevCartItems =>
+        prevCartItems.map(cartItem => 
+          cartItem.id === updatedItem.id ? updatedItem : cartItem
+        )
+      );
+      setEditingItem(null);
+    }
   };
   
   const handleDeleteItem = (itemId: number) => {
     requestConfirmation(
         'Are you sure you want to permanently delete this item? This action cannot be undone.',
-        () => {
-            setItems(prev => prev.filter(i => i.id !== itemId));
-            setCartItems(prev => prev.filter(i => i.id !== itemId));
-            setWishlist(prev => {
-                const newWishlist = new Set(prev);
-                newWishlist.delete(itemId);
-                return newWishlist;
-            });
+        async () => {
+            const { error } = await supabase
+                .from('craft_items')
+                .delete()
+                .eq('id', itemId);
+
+            if (error) {
+                console.error('Error deleting item:', error);
+                alert('Failed to delete item.');
+            } else {
+                setItems(prev => prev.filter(i => i.id !== itemId));
+                setCartItems(prev => prev.filter(i => i.id !== itemId));
+                setWishlist(prev => {
+                    const newWishlist = new Set(prev);
+                    newWishlist.delete(itemId);
+                    return newWishlist;
+                });
+            }
         }
     );
   };
 
-  const handleAddItem = (newItemData: Omit<CraftItem, 'id'>) => {
-    const newId = Math.max(0, ...items.map(i => i.id)) + 1;
-    const newItem: CraftItem = { ...newItemData, id: newId };
-    setItems(prev => [newItem, ...prev]);
-    setAddItemModalOpen(false);
+  const handleAddItem = async (newItemData: Omit<CraftItem, 'id'>) => {
+    const { data, error } = await supabase
+      .from('craft_items')
+      .insert([newItemData])
+      .select();
+
+    if (error) {
+      console.error('Error adding item:', error);
+      alert('Failed to add item.');
+    } else if (data && data.length > 0) {
+      const newItem = data[0] as CraftItem;
+      setItems(prev => [newItem, ...prev]);
+      setAddItemModalOpen(false);
+    }
   };
 
-  const handleImportItems = (jsonString: string) => {
+  const handleImportItems = async (jsonString: string) => {
     try {
         const importedData = JSON.parse(jsonString);
-        // Basic validation
-        if (Array.isArray(importedData) && importedData.every(item => 'id' in item && 'name' in item)) {
-            setItems(importedData);
-            alert(`${importedData.length} items imported successfully! The catalog has been updated.`);
+        if (Array.isArray(importedData) && importedData.every(item => 'name' in item && 'description' in item)) {
+            // Clear existing items and insert new ones
+            const { error: deleteError } = await supabase.from('craft_items').delete().neq('id', 0); // Delete all
+            if (deleteError) throw deleteError;
+
+            const { data, error: insertError } = await supabase.from('craft_items').insert(importedData).select();
+            if (insertError) throw insertError;
+
+            setItems(data as CraftItem[]);
+            alert(`${data.length} items imported successfully! The catalog has been updated.`);
             setSettingsOpen(false);
         } else {
-            throw new Error("Invalid JSON structure.");
+            throw new Error("Invalid JSON structure. Each item must have at least 'name' and 'description'.");
         }
     } catch (error) {
         console.error("Failed to import and parse JSON:", error);
-        alert("Import failed. Please ensure the file is a valid 'craft-items.json' file.");
+        alert(`Import failed: ${error instanceof Error ? error.message : 'Unknown error'}. Please ensure the file is a valid 'craft-items.json' file.`);
     }
   };
   
-  const handleResetToDefaults = () => {
+  const handleResetToDefaults = async () => {
     requestConfirmation(
         'Are you sure you want to reset all item data to the original defaults? All local changes will be lost.',
-        () => {
-            setItems(CRAFT_ITEMS);
+        async () => {
+            const { error: deleteError } = await supabase.from('craft_items').delete().neq('id', 0); // Delete all
+            if (deleteError) {
+                console.error('Error clearing items:', deleteError);
+                alert('Failed to clear existing items before reset.');
+                return;
+            }
+
+            const { data, error: insertError } = await supabase.from('craft_items').insert(CRAFT_ITEMS).select();
+            if (insertError) {
+                console.error('Error inserting default items:', insertError);
+                alert('Failed to insert default items.');
+                return;
+            }
+
+            setItems(data as CraftItem[]);
             alert("Catalog has been reset to factory defaults.");
             setSettingsOpen(false);
         }
