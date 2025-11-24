@@ -11,9 +11,12 @@ import WishlistView from './components/WishlistView';
 import EditItemModal from './components/EditItemModal';
 import AddItemModal from './components/AddItemModal';
 import ConfirmationModal from './components/ConfirmationModal';
-import { supabase } from './src/integrations/supabase/client'; // Corrected import path
+import LoginPage from '@/src/pages/LoginPage'; // Corrected import path
+import { supabase } from './src/integrations/supabase/client';
+import { useSession } from '@/src/components/SessionContextProvider'; // Corrected import path
 
 const App: React.FC = () => {
+  const { session, isLoading: isSessionLoading } = useSession(); // Use the session context
   const [items, setItems] = React.useState<CraftItem[]>([]);
   const [cartItems, setCartItems] = React.useState<CraftItem[]>([]);
   const [wishlist, setWishlist] = React.useState<Set<number>>(() => {
@@ -32,10 +35,10 @@ const App: React.FC = () => {
   const [isSettingsOpen, setSettingsOpen] = React.useState(false);
   const [editingItem, setEditingItem] = React.useState<CraftItem | null>(null);
   const [isAddItemModalOpen, setAddItemModalOpen] = React.useState(false);
-  const [isAdminMode, setIsAdminMode] = React.useState(false); // Revert to local admin state
+  const [isAdminMode, setIsAdminMode] = React.useState(false); // Now derived from Supabase profile
   const [confirmation, setConfirmation] = React.useState<{ message: string; onConfirm: () => void; } | null>(null);
 
-  // Fetch items from Supabase on initial mount
+  // Fetch items from Supabase on initial mount or when session changes
   React.useEffect(() => {
     const fetchItems = async () => {
       const { data, error } = await supabase
@@ -52,7 +55,31 @@ const App: React.FC = () => {
     };
 
     fetchItems();
-  }, []); // No dependency on 'user' anymore
+  }, [session]); // Refetch items if session changes (e.g., user logs in/out)
+
+  // Fetch user profile and set admin mode
+  React.useEffect(() => {
+    const fetchProfile = async () => {
+      if (session?.user) {
+        const { data, error } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', session.user.id)
+          .single();
+
+        if (error) {
+          console.error('Error fetching profile:', error);
+          setIsAdminMode(false);
+        } else if (data) {
+          setIsAdminMode(data.is_admin);
+        }
+      } else {
+        setIsAdminMode(false); // Not logged in, not admin
+      }
+    };
+
+    fetchProfile();
+  }, [session]); // Re-run when session changes
 
   // Persist wishlist to localStorage whenever it changes
   React.useEffect(() => {
@@ -63,21 +90,23 @@ const App: React.FC = () => {
     }
   }, [wishlist]);
 
-  // Simple password-based admin login
-  const handleAdminLogin = (password: string) => {
-    if (password === '12345678') { // Hardcoded password for simplicity
-      setIsAdminMode(true);
-      alert("Admin mode enabled.");
-      setSettingsOpen(false);
-    } else {
-      alert("Incorrect password.");
-    }
+  // Admin login/logout now handled by Supabase Auth UI
+  const handleAdminLogin = async () => {
+    // This function is now a placeholder, actual login happens via Auth UI
+    // We will rely on the session and profile fetch to set isAdminMode
+    setSettingsOpen(false);
   };
 
-  const handleAdminLogout = () => {
-    setIsAdminMode(false);
-    alert("Admin mode disabled.");
-    setSettingsOpen(false);
+  const handleAdminLogout = async () => {
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Error logging out:', error);
+      alert('Failed to log out.');
+    } else {
+      alert('Logged out successfully.');
+      setSettingsOpen(false);
+      setIsAdminMode(false); // Explicitly set to false on logout
+    }
   };
 
   const handleAddToCart = (item: CraftItem) => {
@@ -122,6 +151,9 @@ const App: React.FC = () => {
         imageUrl: updatedItem.imageUrl,
         category: updatedItem.category,
         modelUrl: updatedItem.modelUrl,
+        status: updatedItem.status, // Include new fields
+        is_available: updatedItem.is_available, // Include new fields
+        knitter: updatedItem.knitter, // Include new fields
       })
       .eq('id', updatedItem.id);
 
@@ -243,6 +275,20 @@ const App: React.FC = () => {
   const wishlistItems = items.filter(item => wishlist.has(item.id));
   const cartItemIds = new Set(cartItems.map(i => i.id));
 
+  // Show loading state while session is being fetched
+  if (isSessionLoading) {
+    return (
+      <div className="min-h-screen flex items-center justify-center bg-brand-background text-brand-text">
+        Loading authentication...
+      </div>
+    );
+  }
+
+  // If no session, show login page
+  if (!session) {
+    return <LoginPage />;
+  }
+
   return (
     <div className={`theme-${theme} min-h-screen bg-brand-background font-body text-brand-text flex flex-col`}>
       <header className="p-4 flex justify-center items-center shadow-md bg-brand-white-ish/70 backdrop-blur-sm sticky top-0 z-20">
@@ -309,7 +355,7 @@ const App: React.FC = () => {
       )}
 
       {isAdminMode && (
-        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 bg-yellow-300 text-yellow-800 px-4 py-1 rounded-full text-sm font-bold shadow-lg animate-fade-in z-30">
+        <div className="fixed bottom-20 left-1/2 -translate-x-1/2 bg-brand-secondary text-brand-text px-4 py-1 rounded-full text-sm font-bold shadow-lg animate-fade-in z-30">
             Admin Mode Enabled
         </div>
       )}
@@ -327,7 +373,7 @@ const App: React.FC = () => {
         currentTheme={theme}
         onSetTheme={handleSetTheme}
         isAdminMode={isAdminMode}
-        onAdminLogin={handleAdminLogin} // Pass the simplified login handler
+        onAdminLogin={handleAdminLogin} // Placeholder, actual login via Auth UI
         onAdminLogout={handleAdminLogout}
         items={items}
         onImportItems={handleImportItems}

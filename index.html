@@ -5,15 +5,16 @@
     <link rel="icon" type="image/svg+xml" href="/vite.svg" />
     <meta name="viewport" content="width=device-width, initial-scale=1.0" />
     <title>Crafty Spinx Catalog</title>
+    <link href="https://fonts.googleapis.com/css2?family=Lato:wght@400;700&family=Playfair+Display:wght@700&display=swap" rel="stylesheet">
     <script src="https://cdn.tailwindcss.com"></script>
     <!-- 3D Model Viewer Script Removed -->
     <style>
       :root, .theme-pastel {
-        --color-bg: #FFF8F0;
-        --color-text: #574F41;
-        --color-primary: #FFC0CB;
-        --color-secondary: #A0E7E5;
-        --color-accent: #F38181;
+        --color-bg: #FFF8F0; /* Off-white/Cream */
+        --color-text: #2C3E50; /* Dark Navy */
+        --color-primary: #C0392B; /* Deep Red */
+        --color-secondary: #F1C40F; /* Gold/Yellow */
+        --color-accent: #E74C3C; /* Slightly lighter red for accent */
         --color-white-ish: #FFFFFF;
       }
       .theme-forest {
@@ -62,6 +63,10 @@
        ::-webkit-scrollbar-thumb:hover {
         background-color: var(--color-primary);
       }
+
+      body {
+        font-size: 18px; /* Set base font size */
+      }
     </style>
     <script>
       tailwind.config = {
@@ -76,8 +81,8 @@
               'brand-white-ish': 'var(--color-white-ish)',
             },
             fontFamily: {
-              'display': ['"Comic Sans MS"', 'cursive'],
-              'body': ['"Gill Sans"', 'sans-serif'],
+              'display': ['"Playfair Display"', 'serif'],
+              'body': ['Lato', 'sans-serif'],
             },
              animation: {
               'fade-in': 'fade-in 0.5s ease-in-out forwards',
