@@ -11,12 +11,9 @@ import WishlistView from './components/WishlistView';
 import EditItemModal from './components/EditItemModal';
 import AddItemModal from './components/AddItemModal';
 import ConfirmationModal from './components/ConfirmationModal';
-import { supabase } from './src/services/supabaseClient';
-import { SessionContextProvider, useSession } from './src/integrations/supabase/auth/SessionContextProvider';
-import Login from './src/pages/Login';
+import { supabase } from './src/services/supabaseClient'; // Keep Supabase client for item CRUD
 
-const AppContent: React.FC = () => {
-  const { session, user } = useSession();
+const App: React.FC = () => {
   const [items, setItems] = React.useState<CraftItem[]>([]);
   const [cartItems, setCartItems] = React.useState<CraftItem[]>([]);
   const [wishlist, setWishlist] = React.useState<Set<number>>(() => {
@@ -35,12 +32,10 @@ const AppContent: React.FC = () => {
   const [isSettingsOpen, setSettingsOpen] = React.useState(false);
   const [editingItem, setEditingItem] = React.useState<CraftItem | null>(null);
   const [isAddItemModalOpen, setAddItemModalOpen] = React.useState(false);
+  const [isAdminMode, setIsAdminMode] = React.useState(false); // Revert to local admin state
   const [confirmation, setConfirmation] = React.useState<{ message: string; onConfirm: () => void; } | null>(null);
 
-  // Admin mode is now determined by user session
-  const isAdminMode = !!user; // If a user is logged in, they are considered an admin for this app's purpose
-
-  // Fetch items from Supabase on initial mount or when user changes (e.g., login/logout)
+  // Fetch items from Supabase on initial mount
   React.useEffect(() => {
     const fetchItems = async () => {
       const { data, error } = await supabase
@@ -57,7 +52,7 @@ const AppContent: React.FC = () => {
     };
 
     fetchItems();
-  }, [user]); // Re-fetch items if user changes (e.g., after login/logout)
+  }, []); // No dependency on 'user' anymore
 
   // Persist wishlist to localStorage whenever it changes
   React.useEffect(() => {
@@ -68,35 +63,21 @@ const AppContent: React.FC = () => {
     }
   }, [wishlist]);
 
-  const handleAdminLogin = async (email: string, password?: string) => {
-    if (password) {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        alert(`Login failed: ${error.message}`);
-      } else {
-        alert("Admin mode enabled.");
-        setSettingsOpen(false);
-      }
+  // Simple password-based admin login
+  const handleAdminLogin = (password: string) => {
+    if (password === '12345678') { // Hardcoded password for simplicity
+      setIsAdminMode(true);
+      alert("Admin mode enabled.");
+      setSettingsOpen(false);
     } else {
-      const { error } = await supabase.auth.signInWithOtp({ email });
-      if (error) {
-        alert(`Magic link failed: ${error.message}`);
-      } else {
-        alert("Check your email for the magic link!");
-        setSettingsOpen(false);
-      }
+      alert("Incorrect password.");
     }
   };
 
-  const handleAdminLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error('Error logging out:', error);
-      alert('Failed to log out.');
-    } else {
-      alert("Admin mode disabled.");
-      setSettingsOpen(false);
-    }
+  const handleAdminLogout = () => {
+    setIsAdminMode(false);
+    alert("Admin mode disabled.");
+    setSettingsOpen(false);
   };
 
   const handleAddToCart = (item: CraftItem) => {
@@ -262,10 +243,6 @@ const AppContent: React.FC = () => {
   const wishlistItems = items.filter(item => wishlist.has(item.id));
   const cartItemIds = new Set(cartItems.map(i => i.id));
 
-  if (!session) {
-    return <Login />;
-  }
-
   return (
     <div className={`theme-${theme} min-h-screen bg-brand-background font-body text-brand-text flex flex-col`}>
       <header className="p-4 flex justify-center items-center shadow-md bg-brand-white-ish/70 backdrop-blur-sm sticky top-0 z-20">
@@ -350,7 +327,7 @@ const AppContent: React.FC = () => {
         currentTheme={theme}
         onSetTheme={handleSetTheme}
         isAdminMode={isAdminMode}
-        onAdminLogin={handleAdminLogin}
+        onAdminLogin={handleAdminLogin} // Pass the simplified login handler
         onAdminLogout={handleAdminLogout}
         items={items}
         onImportItems={handleImportItems}
@@ -380,11 +357,5 @@ const AppContent: React.FC = () => {
     </div>
   );
 };
-
-const App: React.FC = () => (
-  <SessionContextProvider>
-    <AppContent />
-  </SessionContextProvider>
-);
 
 export default App;
