@@ -1,7 +1,3 @@
-<div align="center">
-<img width="1200" height="475" alt="GHBanner" src="https://github.com/user-attachments/assets/0aa67016-6eaf-458a-adb2-6e31a0763ed6" />
-</div>
-
 # Crafty Spinx v0.x
 
 A delightful catalog to browse and select charming, hand-knitted teddy bears. Users can swipe through the collection, mark their favorites, and place an order inquiry.
