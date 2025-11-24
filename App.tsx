@@ -11,12 +11,8 @@ import WishlistView from './components/WishlistView';
 import EditItemModal from './components/EditItemModal';
 import AddItemModal from './components/AddItemModal';
 import ConfirmationModal from './components/ConfirmationModal';
-import { supabase } from './src/services/supabaseClient';
-import { SessionContextProvider, useSession } from './src/integrations/supabase/auth/SessionContextProvider';
-import Login from './src/pages/Login';
 
-const AppContent: React.FC = () => {
-  const { session, user } = useSession();
+const App: React.FC = () => {
   const [items, setItems] = React.useState<CraftItem[]>([]);
   const [cartItems, setCartItems] = React.useState<CraftItem[]>([]);
   const [wishlist, setWishlist] = React.useState<Set<number>>(() => {
@@ -35,31 +31,36 @@ const AppContent: React.FC = () => {
   const [isSettingsOpen, setSettingsOpen] = React.useState(false);
   const [editingItem, setEditingItem] = React.useState<CraftItem | null>(null);
   const [isAddItemModalOpen, setAddItemModalOpen] = React.useState(false);
+  const [isAdminMode, setIsAdminMode] = React.useState(false);
   const [confirmation, setConfirmation] = React.useState<{ message: string; onConfirm: () => void; } | null>(null);
 
-  // Admin mode is now determined by user session
-  const isAdminMode = !!user; // If a user is logged in, they are considered an admin for this app's purpose
 
-  // Fetch items from Supabase on initial mount or when user changes (e.g., login/logout)
+  // Load all item data from localStorage on initial mount
   React.useEffect(() => {
-    const fetchItems = async () => {
-      const { data, error } = await supabase
-        .from('craft_items')
-        .select('*')
-        .order('id', { ascending: true });
-
-      if (error) {
-        console.error('Error fetching items:', error);
-        setItems(CRAFT_ITEMS); // Fallback to local constants if Supabase fetch fails
+    try {
+      const cachedItemsJSON = window.localStorage.getItem('crafty-spinx-items');
+      if (cachedItemsJSON) {
+        setItems(JSON.parse(cachedItemsJSON));
       } else {
-        setItems(data as CraftItem[]);
+        setItems(CRAFT_ITEMS);
       }
-    };
+    } catch (error) {
+      console.error("Could not load items from localStorage, using defaults.", error);
+      setItems(CRAFT_ITEMS);
+    }
+  }, []);
 
-    fetchItems();
-  }, [user]); // Re-fetch items if user changes (e.g., after login/logout)
+  // Persist the entire item list to localStorage whenever it changes
+  React.useEffect(() => {
+    if (items.length > 0) { // Avoid saving an empty array on initial load
+        try {
+            window.localStorage.setItem('crafty-spinx-items', JSON.stringify(items));
+        } catch (error) {
+            console.error("Could not save items to localStorage", error);
+        }
+    }
+  }, [items]);
 
-  // Persist wishlist to localStorage whenever it changes
   React.useEffect(() => {
     try {
         window.localStorage.setItem('wishlistItems', JSON.stringify(Array.from(wishlist)));
@@ -68,35 +69,20 @@ const AppContent: React.FC = () => {
     }
   }, [wishlist]);
 
-  const handleAdminLogin = async (email: string, password?: string) => {
-    if (password) {
-      const { error } = await supabase.auth.signInWithPassword({ email, password });
-      if (error) {
-        alert(`Login failed: ${error.message}`);
-      } else {
-        alert("Admin mode enabled.");
-        setSettingsOpen(false);
-      }
+  const handleAdminLogin = (password: string) => {
+    if (password === '12345678') {
+      setIsAdminMode(true);
+      alert("Admin mode enabled.");
+      setSettingsOpen(false);
     } else {
-      const { error } = await supabase.auth.signInWithOtp({ email });
-      if (error) {
-        alert(`Magic link failed: ${error.message}`);
-      } else {
-        alert("Check your email for the magic link!");
-        setSettingsOpen(false);
-      }
+      alert("Incorrect password.");
     }
   };
 
-  const handleAdminLogout = async () => {
-    const { error } = await supabase.auth.signOut();
-    if (error) {
-      console.error('Error logging out:', error);
-      alert('Failed to log out.');
-    } else {
-      alert("Admin mode disabled.");
-      setSettingsOpen(false);
-    }
+  const handleAdminLogout = () => {
+    setIsAdminMode(false);
+    alert("Admin mode disabled.");
+    setSettingsOpen(false);
   };
 
   const handleAddToCart = (item: CraftItem) => {
@@ -131,118 +117,64 @@ const AppContent: React.FC = () => {
     document.documentElement.className = `theme-${newTheme}`;
   }
   
-  const handleSaveItem = async (updatedItem: CraftItem) => {
-    const { error } = await supabase
-      .from('craft_items')
-      .update({
-        name: updatedItem.name,
-        description: updatedItem.description,
-        price: updatedItem.price,
-        imageUrl: updatedItem.imageUrl,
-        category: updatedItem.category,
-        modelUrl: updatedItem.modelUrl,
-      })
-      .eq('id', updatedItem.id);
-
-    if (error) {
-      console.error('Error updating item:', error);
-      alert('Failed to update item.');
-    } else {
-      setItems(prevItems =>
-          prevItems.map(i => (i.id === updatedItem.id ? updatedItem : i))
-      );
-      setCartItems(prevCartItems =>
-        prevCartItems.map(cartItem => 
-          cartItem.id === updatedItem.id ? updatedItem : cartItem
-        )
-      );
-      setEditingItem(null);
-    }
+  const handleSaveItem = (updatedItem: CraftItem) => {
+    // Update the master list of items
+    setItems(prevItems =>
+        prevItems.map(i => (i.id === updatedItem.id ? updatedItem : i))
+    );
+    // FIX: Also update the item if it's in the cart to prevent stale data
+    setCartItems(prevCartItems =>
+      prevCartItems.map(cartItem => 
+        cartItem.id === updatedItem.id ? updatedItem : cartItem
+      )
+    );
+    setEditingItem(null);
   };
   
   const handleDeleteItem = (itemId: number) => {
     requestConfirmation(
         'Are you sure you want to permanently delete this item? This action cannot be undone.',
-        async () => {
-            const { error } = await supabase
-                .from('craft_items')
-                .delete()
-                .eq('id', itemId);
-
-            if (error) {
-                console.error('Error deleting item:', error);
-                alert('Failed to delete item.');
-            } else {
-                setItems(prev => prev.filter(i => i.id !== itemId));
-                setCartItems(prev => prev.filter(i => i.id !== itemId));
-                setWishlist(prev => {
-                    const newWishlist = new Set(prev);
-                    newWishlist.delete(itemId);
-                    return newWishlist;
-                });
-            }
+        () => {
+            setItems(prev => prev.filter(i => i.id !== itemId));
+            setCartItems(prev => prev.filter(i => i.id !== itemId));
+            setWishlist(prev => {
+                const newWishlist = new Set(prev);
+                newWishlist.delete(itemId);
+                return newWishlist;
+            });
         }
     );
   };
 
-  const handleAddItem = async (newItemData: Omit<CraftItem, 'id'>) => {
-    const { data, error } = await supabase
-      .from('craft_items')
-      .insert([newItemData])
-      .select();
-
-    if (error) {
-      console.error('Error adding item:', error);
-      alert('Failed to add item.');
-    } else if (data && data.length > 0) {
-      const newItem = data[0] as CraftItem;
-      setItems(prev => [newItem, ...prev]);
-      setAddItemModalOpen(false);
-    }
+  const handleAddItem = (newItemData: Omit<CraftItem, 'id'>) => {
+    const newId = Math.max(0, ...items.map(i => i.id)) + 1;
+    const newItem: CraftItem = { ...newItemData, id: newId };
+    setItems(prev => [newItem, ...prev]);
+    setAddItemModalOpen(false);
   };
 
-  const handleImportItems = async (jsonString: string) => {
+  const handleImportItems = (jsonString: string) => {
     try {
         const importedData = JSON.parse(jsonString);
-        if (Array.isArray(importedData) && importedData.every(item => 'name' in item && 'description' in item)) {
-            // Clear existing items and insert new ones
-            const { error: deleteError } = await supabase.from('craft_items').delete().neq('id', 0); // Delete all
-            if (deleteError) throw deleteError;
-
-            const { data, error: insertError } = await supabase.from('craft_items').insert(importedData).select();
-            if (insertError) throw insertError;
-
-            setItems(data as CraftItem[]);
-            alert(`${data.length} items imported successfully! The catalog has been updated.`);
+        // Basic validation
+        if (Array.isArray(importedData) && importedData.every(item => 'id' in item && 'name' in item)) {
+            setItems(importedData);
+            alert(`${importedData.length} items imported successfully! The catalog has been updated.`);
             setSettingsOpen(false);
         } else {
-            throw new Error("Invalid JSON structure. Each item must have at least 'name' and 'description'.");
+            throw new Error("Invalid JSON structure.");
         }
     } catch (error) {
         console.error("Failed to import and parse JSON:", error);
-        alert(`Import failed: ${error instanceof Error ? error.message : 'Unknown error'}. Please ensure the file is a valid 'craft-items.json' file.`);
+        alert("Import failed. Please ensure the file is a valid 'craft-items.json' file.");
     }
   };
   
-  const handleResetToDefaults = async () => {
+  const handleResetToDefaults = () => {
     requestConfirmation(
         'Are you sure you want to reset all item data to the original defaults? All local changes will be lost.',
-        async () => {
-            const { error: deleteError } = await supabase.from('craft_items').delete().neq('id', 0); // Delete all
-            if (deleteError) {
-                console.error('Error clearing items:', deleteError);
-                alert('Failed to clear existing items before reset.');
-                return;
-            }
-
-            const { data, error: insertError } = await supabase.from('craft_items').insert(CRAFT_ITEMS).select();
-            if (insertError) {
-                console.error('Error inserting default items:', insertError);
-                alert('Failed to insert default items.');
-                return;
-            }
-
-            setItems(data as CraftItem[]);
+        () => {
+            setItems(CRAFT_ITEMS);
             alert("Catalog has been reset to factory defaults.");
             setSettingsOpen(false);
         }
@@ -261,10 +193,6 @@ const AppContent: React.FC = () => {
 
   const wishlistItems = items.filter(item => wishlist.has(item.id));
   const cartItemIds = new Set(cartItems.map(i => i.id));
-
-  if (!session) {
-    return <Login />;
-  }
 
   return (
     <div className={`theme-${theme} min-h-screen bg-brand-background font-body text-brand-text flex flex-col`}>
@@ -380,11 +308,5 @@ const AppContent: React.FC = () => {
     </div>
   );
 };
-
-const App: React.FC = () => (
-  <SessionContextProvider>
-    <AppContent />
-  </SessionContextProvider>
-);
 
 export default App;
