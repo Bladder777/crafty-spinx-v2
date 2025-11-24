@@ -11,7 +11,7 @@ import WishlistView from './components/WishlistView';
 import EditItemModal from './components/EditItemModal';
 import AddItemModal from './components/AddItemModal';
 import ConfirmationModal from './components/ConfirmationModal';
-import { supabase } from './src/services/supabaseClient'; // Corrected import path
+import { supabase } from './src/services/supabaseClient';
 
 const App: React.FC = () => {
   const [items, setItems] = React.useState<CraftItem[]>([]);
@@ -35,9 +35,10 @@ const App: React.FC = () => {
   const [isAdminMode, setIsAdminMode] = React.useState(false);
   const [confirmation, setConfirmation] = React.useState<{ message: string; onConfirm: () => void; } | null>(null);
 
-  // Fetch items from Supabase on initial mount
+  // Fetch items from Supabase and set up Realtime subscription on initial mount
   React.useEffect(() => {
-    const fetchItems = async () => {
+    const fetchAndSubscribeItems = async () => {
+      // 1. Initial fetch
       const { data, error } = await supabase
         .from('craft_items')
         .select('*')
@@ -45,15 +46,46 @@ const App: React.FC = () => {
 
       if (error) {
         console.error('Error fetching items:', error);
-        // Fallback to local constants if Supabase fails
-        setItems(CRAFT_ITEMS);
+        setItems(CRAFT_ITEMS); // Fallback to local constants if Supabase fails
       } else {
         setItems(data as CraftItem[]);
       }
+
+      // 2. Set up Realtime subscription
+      const channel = supabase
+        .channel('public:craft_items') // Channel name, typically 'public:table_name'
+        .on(
+          'postgres_changes',
+          { event: '*', schema: 'public', table: 'craft_items' },
+          (payload) => {
+            console.log('Realtime change received!', payload);
+            setItems((prevItems) => {
+              if (payload.eventType === 'INSERT') {
+                // Add new item to the beginning of the list
+                return [payload.new as CraftItem, ...prevItems];
+              } else if (payload.eventType === 'UPDATE') {
+                // Find and replace the updated item
+                return prevItems.map((item) =>
+                  item.id === (payload.new as CraftItem).id ? (payload.new as CraftItem) : item
+                );
+              } else if (payload.eventType === 'DELETE') {
+                // Remove the deleted item
+                return prevItems.filter((item) => item.id !== (payload.old as CraftItem).id);
+              }
+              return prevItems; // Should not happen
+            });
+          }
+        )
+        .subscribe();
+
+      // Cleanup function to unsubscribe when the component unmounts
+      return () => {
+        supabase.removeChannel(channel);
+      };
     };
 
-    fetchItems();
-  }, []);
+    fetchAndSubscribeItems();
+  }, []); // Empty dependency array to run once on mount
 
   // Persist wishlist to localStorage whenever it changes
   React.useEffect(() => {
@@ -161,9 +193,8 @@ const App: React.FC = () => {
       console.error('Error updating item:', error);
       alert(`Failed to update item: ${error.message}`);
     } else if (data && data.length > 0) {
-      setItems(prevItems =>
-          prevItems.map(i => (i.id === updatedItem.id ? data[0] as CraftItem : i))
-      );
+      // Realtime subscription will handle updating 'items' state,
+      // but we need to update cartItems immediately if the item is in cart.
       setCartItems(prevCartItems =>
         prevCartItems.map(cartItem => 
           cartItem.id === updatedItem.id ? data[0] as CraftItem : cartItem
@@ -187,7 +218,8 @@ const App: React.FC = () => {
               console.error('Error deleting item:', error);
               alert(`Failed to delete item: ${error.message}`);
             } else {
-              setItems(prev => prev.filter(i => i.id !== itemId));
+              // Realtime subscription will handle updating 'items' state.
+              // We need to update cartItems and wishlist immediately.
               setCartItems(prev => prev.filter(i => i.id !== itemId));
               setWishlist(prev => {
                   const newWishlist = new Set(prev);
@@ -219,7 +251,7 @@ const App: React.FC = () => {
       console.error('Error adding item:', error);
       alert(`Failed to add item: ${error.message}`);
     } else if (data && data.length > 0) {
-      setItems(prev => [data[0] as CraftItem, ...prev]);
+      // Realtime subscription will handle updating 'items' state.
       setAddItemModalOpen(false);
       alert('Item added successfully!');
     }
@@ -249,7 +281,7 @@ const App: React.FC = () => {
 
             if (insertError) throw insertError;
 
-            setItems(data as CraftItem[]);
+            // Realtime subscription will handle updating 'items' state.
             alert(`${data.length} items imported successfully! The catalog has been updated.`);
             setSettingsOpen(false);
         } else {
@@ -292,7 +324,7 @@ const App: React.FC = () => {
                 return;
             }
 
-            setItems(data as CraftItem[]);
+            // Realtime subscription will handle updating 'items' state.
             alert("Catalog has been reset to factory defaults.");
             setSettingsOpen(false);
         }
