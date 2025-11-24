@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import * as React from 'react';
 import { CraftItem } from '../types';
 
 interface SettingsModalProps {
@@ -22,9 +22,9 @@ const themes = [
 ];
 
 const SettingsModal: React.FC<SettingsModalProps> = ({ isOpen, onClose, currentTheme, onSetTheme, isAdminMode, onAdminLogin, onAdminLogout, items, onImportItems, onResetToDefaults, requestConfirmation }) => {
-  const [password, setPassword] = useState('');
-  const [isAboutOpen, setAboutOpen] = useState(false);
-  const [isDragging, setIsDragging] = useState(false);
+  const [password, setPassword] = React.useState('');
+  const [isAboutOpen, setAboutOpen] = React.useState(false);
+  const [isDragging, setIsDragging] = React.useState(false);
 
   if (!isOpen) return null;
 

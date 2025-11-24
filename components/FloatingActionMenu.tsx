@@ -1,4 +1,4 @@
-import React, { useState } from 'react';
+import * as React from 'react';
 import { GridViewIcon, SwipeViewIcon, SettingsIcon, PlusIcon, AddItemIcon } from './Icons';
 
 interface FloatingActionMenuProps {
@@ -10,7 +10,7 @@ interface FloatingActionMenuProps {
 }
 
 const FloatingActionMenu: React.FC<FloatingActionMenuProps> = ({ isGridMode, onToggleView, onOpenSettings, onAddItem, isAdminMode }) => {
-  const [isOpen, setIsOpen] = useState(false);
+  const [isOpen, setIsOpen] = React.useState(false);
 
   const menuItems = [
     {

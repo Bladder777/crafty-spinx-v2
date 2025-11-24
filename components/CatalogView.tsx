@@ -1,4 +1,4 @@
-import React, { useState, useMemo } from 'react';
+import * as React from 'react';
 import { CraftItem, Category } from '../types';
 import ItemCard from './ItemCard';
 
@@ -16,9 +16,9 @@ interface CatalogViewProps {
 const CATEGORIES: (Category | 'All')[] = ['All', 'Crochet', 'Decor', 'Random'];
 
 const CatalogView: React.FC<CatalogViewProps> = ({ items, onAddToCart, cartItemIds, wishlist, onToggleWishlist, onEditItem, onDeleteItem, isAdminMode }) => {
-  const [selectedCategory, setSelectedCategory] = useState<Category | 'All'>('All');
+  const [selectedCategory, setSelectedCategory] = React.useState<Category | 'All'>('All');
 
-  const filteredItems = useMemo(() => {
+  const filteredItems = React.useMemo(() => {
     if (selectedCategory === 'All') {
       return items;
     }

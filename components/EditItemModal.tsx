@@ -1,4 +1,4 @@
-import React, { useState, useRef, useEffect } from 'react';
+import * as React from 'react';
 import { CraftItem } from '../types';
 import { XIcon } from './Icons';
 
@@ -9,13 +9,13 @@ interface EditItemModalProps {
 }
 
 const EditItemModal: React.FC<EditItemModalProps> = ({ item, onClose, onSave }) => {
-  const [name, setName] = useState('');
-  const [price, setPrice] = useState(0);
-  const [description, setDescription] = useState('');
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [name, setName] = React.useState('');
+  const [price, setPrice] = React.useState(0);
+  const [description, setDescription] = React.useState('');
+  const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (item) {
       setName(item.name);
       setPrice(item.price);

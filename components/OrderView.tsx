@@ -1,4 +1,4 @@
-import React, { useState, useMemo, useEffect } from 'react';
+import * as React from 'react';
 import { CraftItem } from '../types';
 
 interface CartViewProps {
@@ -8,16 +8,16 @@ interface CartViewProps {
 }
 
 const CartView: React.FC<CartViewProps> = ({ cartItems, onSendInquiry, onRemoveItem }) => {
-  const [name, setName] = useState('');
-  const [email, setEmail] = useState('');
-  const [isSubmitted, setIsSubmitted] = useState(false);
-  const [pricePopKey, setPricePopKey] = useState(0);
+  const [name, setName] = React.useState('');
+  const [email, setEmail] = React.useState('');
+  const [isSubmitted, setIsSubmitted] = React.useState(false);
+  const [pricePopKey, setPricePopKey] = React.useState(0);
 
-  const totalPrice = useMemo(() => {
+  const totalPrice = React.useMemo(() => {
     return cartItems.reduce((sum, item) => sum + item.price, 0);
   }, [cartItems]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (totalPrice > 0) {
       setPricePopKey(key => key + 1);
     }
@@ -27,7 +27,7 @@ const CartView: React.FC<CartViewProps> = ({ cartItems, onSendInquiry, onRemoveI
     e.preventDefault();
     if (name && email) {
       setIsSubmitted(true);
-      setTimeout(() => {
+      React.setTimeout(() => {
           onSendInquiry();
       }, 3000)
     }

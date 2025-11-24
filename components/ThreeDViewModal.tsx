@@ -2,7 +2,7 @@
 // This was likely conflicting with the project's tsconfig.json settings and
 // preventing the `declare global` augmentation for the `<model-viewer>`
 // custom element from being recognized by TypeScript.
-import React, { useEffect } from 'react';
+import * as React from 'react';
 import { CraftItem } from '../types';
 import { XIcon } from './Icons';
 
@@ -13,7 +13,7 @@ interface ThreeDViewModalProps {
 
 const ThreeDViewModal: React.FC<ThreeDViewModalProps> = ({ item, onClose }) => {
 
-  useEffect(() => {
+  React.useEffect(() => {
     const handleKeyDown = (event: KeyboardEvent) => {
       if (event.key === 'Escape') {
         onClose();

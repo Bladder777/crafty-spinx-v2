@@ -1,4 +1,4 @@
-import React from 'react';
+import * as React from 'react';
 import { CraftItem } from '../types';
 import ItemCard from './ItemCard';
 

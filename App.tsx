@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import * as React from 'react';
 import { CraftItem, View } from './types';
 import { CRAFT_ITEMS } from './constants';
 import CatalogView from './components/CatalogView';
@@ -13,9 +13,9 @@ import AddItemModal from './components/AddItemModal';
 import ConfirmationModal from './components/ConfirmationModal';
 
 const App: React.FC = () => {
-  const [items, setItems] = useState<CraftItem[]>([]);
-  const [cartItems, setCartItems] = useState<CraftItem[]>([]);
-  const [wishlist, setWishlist] = useState<Set<number>>(() => {
+  const [items, setItems] = React.useState<CraftItem[]>([]);
+  const [cartItems, setCartItems] = React.useState<CraftItem[]>([]);
+  const [wishlist, setWishlist] = React.useState<Set<number>>(() => {
     try {
       const savedWishlist = window.localStorage.getItem('wishlistItems');
       return savedWishlist ? new Set(JSON.parse(savedWishlist)) : new Set();
@@ -25,18 +25,18 @@ const App: React.FC = () => {
     }
   });
   
-  const [currentView, setCurrentView] = useState<View>('catalog');
-  const [catalogMode, setCatalogMode] = useState<'swipe' | 'grid'>('swipe');
-  const [theme, setTheme] = useState('pastel');
-  const [isSettingsOpen, setSettingsOpen] = useState(false);
-  const [editingItem, setEditingItem] = useState<CraftItem | null>(null);
-  const [isAddItemModalOpen, setAddItemModalOpen] = useState(false);
-  const [isAdminMode, setIsAdminMode] = useState(false);
-  const [confirmation, setConfirmation] = useState<{ message: string; onConfirm: () => void; } | null>(null);
+  const [currentView, setCurrentView] = React.useState<View>('catalog');
+  const [catalogMode, setCatalogMode] = React.useState<'swipe' | 'grid'>('swipe');
+  const [theme, setTheme] = React.useState('pastel');
+  const [isSettingsOpen, setSettingsOpen] = React.useState(false);
+  const [editingItem, setEditingItem] = React.useState<CraftItem | null>(null);
+  const [isAddItemModalOpen, setAddItemModalOpen] = React.useState(false);
+  const [isAdminMode, setIsAdminMode] = React.useState(false);
+  const [confirmation, setConfirmation] = React.useState<{ message: string; onConfirm: () => void; } | null>(null);
 
 
   // Load all item data from localStorage on initial mount
-  useEffect(() => {
+  React.useEffect(() => {
     try {
       const cachedItemsJSON = window.localStorage.getItem('crafty-spinx-items');
       if (cachedItemsJSON) {
@@ -51,7 +51,7 @@ const App: React.FC = () => {
   }, []);
 
   // Persist the entire item list to localStorage whenever it changes
-  useEffect(() => {
+  React.useEffect(() => {
     if (items.length > 0) { // Avoid saving an empty array on initial load
         try {
             window.localStorage.setItem('crafty-spinx-items', JSON.stringify(items));
@@ -61,7 +61,7 @@ const App: React.FC = () => {
     }
   }, [items]);
 
-  useEffect(() => {
+  React.useEffect(() => {
     try {
         window.localStorage.setItem('wishlistItems', JSON.stringify(Array.from(wishlist)));
     } catch (error) {

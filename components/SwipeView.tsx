@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import * as React from 'react';
 import { CraftItem } from '../types';
 import { HeartIcon, XIcon, WishlistHeartIcon, PencilIcon, TrashIcon } from './Icons';
 
@@ -16,8 +16,8 @@ interface SwipeViewProps {
 type AnimationState = 'in' | 'out-left' | 'out-right' | 'idle';
 
 const SwipeView: React.FC<SwipeViewProps> = ({ items, onAddToCart, cartItemIds, wishlist, onToggleWishlist, onEditItem, onDeleteItem, isAdminMode }) => {
-  const [currentIndex, setCurrentIndex] = useState(0);
-  const [animation, setAnimation] = useState<AnimationState>('in');
+  const [currentIndex, setCurrentIndex] = React.useState(0);
+  const [animation, setAnimation] = React.useState<AnimationState>('in');
   
   const currentItem = items[currentIndex];
 
@@ -28,7 +28,7 @@ const SwipeView: React.FC<SwipeViewProps> = ({ items, onAddToCart, cartItemIds, 
     setAnimation('in');
   };
 
-  useEffect(() => {
+  React.useEffect(() => {
     if (!items.length) return;
     setAnimation('in');
     if (currentIndex >= items.length) {

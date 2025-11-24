@@ -1,4 +1,4 @@
-import React, { useState, useRef } from 'react';
+import * as React from 'react';
 import { CraftItem, Category } from '../types';
 import { XIcon } from './Icons';
 
@@ -13,12 +13,12 @@ const PLACEHOLDER_IMAGE_PREVIEW = 'https://i.ibb.co/p3TQd17/image-placeholder.pn
 
 
 const AddItemModal: React.FC<AddItemModalProps> = ({ isOpen, onClose, onSave }) => {
-  const [name, setName] = useState('');
-  const [price, setPrice] = useState(0);
-  const [description, setDescription] = useState('');
-  const [category, setCategory] = useState<Category>('Crochet');
-  const [previewUrl, setPreviewUrl] = useState<string | null>(null);
-  const fileInputRef = useRef<HTMLInputElement>(null);
+  const [name, setName] = React.useState('');
+  const [price, setPrice] = React.useState(0);
+  const [description, setDescription] = React.useState('');
+  const [category, setCategory] = React.useState<Category>('Crochet');
+  const [previewUrl, setPreviewUrl] = React.useState<string | null>(null);
+  const fileInputRef = React.useRef<HTMLInputElement>(null);
 
   if (!isOpen) return null;
 
