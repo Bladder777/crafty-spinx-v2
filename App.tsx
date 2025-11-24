@@ -66,19 +66,46 @@ const App: React.FC = () => {
 
   // Admin login/logout
   const handleAdminLogin = async (password: string) => {
-    // For now, admin mode is enabled purely by a local password check.
-    // This bypasses Supabase authentication for admin access, keeping it client-side.
-    if (password === '08289737098') {
-      setIsAdminMode(true);
-      alert("Admin mode enabled.");
-      setSettingsOpen(false);
+    if (password === '08289737098') { // Local password check for convenience
+      const { data: authData, error: authError } = await supabase.auth.signInWithPassword({
+        email: 'admin@example.com', // This email needs to exist in Supabase Auth
+        password: password,
+      });
+
+      if (authError) {
+        alert(`Admin login failed: ${authError.message}`);
+        console.error('Admin login error:', authError);
+      } else if (authData.user) {
+        // Check if the user is an admin in the profiles table
+        const { data: profileData, error: profileError } = await supabase
+          .from('profiles')
+          .select('is_admin')
+          .eq('id', authData.user.id)
+          .single();
+
+        if (profileError) {
+          console.error('Error fetching profile:', profileError);
+          alert('Failed to verify admin status. Please ensure the admin profile exists.');
+          await supabase.auth.signOut(); // Sign out if profile check fails
+        } else if (profileData?.is_admin) {
+          setIsAdminMode(true);
+          alert("Admin mode enabled.");
+          setSettingsOpen(false);
+        } else {
+          alert("You are not authorized as an admin.");
+          await supabase.auth.signOut(); // Sign out if not admin
+        }
+      }
     } else {
       alert("Incorrect password.");
     }
   };
 
   const handleAdminLogout = async () => {
-    // No Supabase sign-out needed if admin mode is purely local.
+    const { error } = await supabase.auth.signOut();
+    if (error) {
+      console.error('Error signing out:', error);
+    }
     setIsAdminMode(false);
     alert("Admin mode disabled.");
     setSettingsOpen(false);
@@ -132,7 +159,7 @@ const App: React.FC = () => {
 
     if (error) {
       console.error('Error updating item:', error);
-      alert('Failed to update item.');
+      alert(`Failed to update item: ${error.message}`);
     } else if (data && data.length > 0) {
       setItems(prevItems =>
           prevItems.map(i => (i.id === updatedItem.id ? data[0] as CraftItem : i))
@@ -158,7 +185,7 @@ const App: React.FC = () => {
 
             if (error) {
               console.error('Error deleting item:', error);
-              alert('Failed to delete item.');
+              alert(`Failed to delete item: ${error.message}`);
             } else {
               setItems(prev => prev.filter(i => i.id !== itemId));
               setCartItems(prev => prev.filter(i => i.id !== itemId));
@@ -190,7 +217,7 @@ const App: React.FC = () => {
 
     if (error) {
       console.error('Error adding item:', error);
-      alert('Failed to add item.');
+      alert(`Failed to add item: ${error.message}`);
     } else if (data && data.length > 0) {
       setItems(prev => [data[0] as CraftItem, ...prev]);
       setAddItemModalOpen(false);
