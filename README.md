@@ -10,7 +10,6 @@ A delightful catalog to browse and select charming, hand-knitted teddy bears. Us
 
 *   **Dynamic Catalog Views:** Seamlessly switch between a modern "swipe" view for quick browsing and a traditional "grid" view for an overview of all items.
 *   **Persistent Wishlist & Cart:** Add items to your wishlist and cart, with all selections saved locally in your browser for future visits.
-*   **Interactive 3D Model Viewer:** Experience products in a new dimension with integrated 3D models (where available), allowing for rotation and zoom.
 *   **Live Admin Mode:** A password-protected administrative interface for managing the product catalog directly within the application (add, edit, delete items, reset catalog).
 *   **Real-time Data Sync:** Utilizes Supabase Realtime to instantly reflect changes across all connected clients when items are added, updated, or deleted.
 *   **Theme Customization:** Personalize your browsing experience with various color themes.
@@ -23,7 +22,6 @@ A delightful catalog to browse and select charming, hand-knitted teddy bears. Us
 *   **Tailwind CSS:** Utility-first CSS framework for rapid and responsive styling.
 *   **Vite:** Fast and efficient build tool and development server.
 *   **Supabase:** Backend-as-a-Service for database, authentication, and real-time capabilities.
-*   **`model-viewer` Web Component:** For embedding and interacting with 3D models.
 *   **Google Gemini API (`@google/genai`):** Integrated for AI-powered features (future enhancements).
 *   **Browser Local Storage:** Client-side data persistence for wishlist and cart.
 *   **Custom Routing:** Simple, state-based routing within `App.tsx`.
